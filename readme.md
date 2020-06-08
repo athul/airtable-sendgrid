@@ -1,9 +1,11 @@
-# This is a Title
+## Mailing List with Airtable, Twilio-Sendgrid and Python
 
-----
-
-## Subtitle
-
-### Smaller title
-
-`Hallo` is **Hello** in *German*
+## Usage
+Install all dependencies
+```bash
+$ python mailer.py -c content.md
+```
+### Made with 
+- SendGrid
+- Markdown2
+- Python ❤️

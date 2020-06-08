@@ -16,14 +16,14 @@ def get_emails(base, table):
 
 
 def render_markdown(file):
-    return md.markdown(file.read())
+    return md.markdown(file.read(), extras=["metadata"])
 
 
-def main(from_addr, subject, content, email_list, api_key):
+def send_emails(from_addr, subject, content, email_list, api_key):
     client = SendGridAPIClient(api_key)
 
     unsubscribe = f"<a href='mailto:{from_addr}?subject=Unsubscribe'>Unsubscribe</a>"
-    for i, email in enumerate(emails):
+    for i, email in enumerate(email_list):
         message = Mail(
             subject=subject,
             from_email=from_addr,
@@ -40,18 +40,19 @@ def main(from_addr, subject, content, email_list, api_key):
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
     parser.add_argument('-c', '--content', required=True,
-                        help="A markdown file for contents of the     Email", type=argparse.FileType("r"))
-    parser.add_argument('-s', '--subject', required=True,
-                        help="Subject of the email")
+                        help="A markdown file for contents of the Email", type=argparse.FileType("r"))
     args = parser.parse_args()
 
     sg_api_key = os.getenv("SENDGRID_API_KEY")
-    base_key = os.getenv("AIRTABLE_BASE_KEY")
+    base_key = os.getenv("AIRTABLE_BASE_ID")
     table_name = os.getenv("AIRTABLE_TABLE_NAME")
     from_addr = os.getenv("FROM_ADDRESS")
 
-    md_content = render_markdown(args.markdown)
-    emails = get_emails(base=base_key, table=table_name)
-
-    main(from_addr=from_addr, subject=args.subject,
-         content=md_content, email_list=emails, api_key=sg_api_key)
+    md_content = render_markdown(args.content)
+    subject = md_content.metadata.get("Subject")
+    if subject != None:
+        emails = get_emails(base=base_key, table=table_name)
+        send_emails(from_addr=from_addr, subject=subject,
+                    content=md_content, email_list=emails, api_key=sg_api_key)
+    else:
+        print("Subject not found in the Markdown file")

@@ -1,0 +1,10 @@
+airtable-python-wrapper==0.13.0
+certifi==2020.4.5.2
+chardet==3.0.4
+idna==2.9
+markdown2==2.3.9
+python-http-client==3.2.7
+requests==2.23.0
+sendgrid==6.3.1
+six==1.15.0
+urllib3==1.25.9
