@@ -1,6 +1,7 @@
 import os
 from airtable import Airtable
 import argparse
+from dotenv import load_dotenv
 from sendgrid import SendGridAPIClient
 from sendgrid.helpers.mail import Mail
 import markdown2 as md
@@ -8,19 +9,19 @@ import markdown2 as md
 
 def get_emails(base, table):
     airtable = Airtable(base, table)
-    get_emails = airtable.get_all(fields='Email')
-    ps = []
-    for email in get_emails:
-        ps.append(email.get('fields').get('Email'))
-    return ps
+    get_all_emails = airtable.get_all(fields='Email')
+    emails = []
+    for email in get_all_emails:
+        emails.append(email['fields']['Email'])
+    return emails
 
 
 def render_markdown(file):
     return md.markdown(file.read(), extras=["metadata"])
 
 
-def send_emails(from_addr, subject, content, email_list, api_key):
-    client = SendGridAPIClient(api_key)
+def send_emails(from_addr, subject, content, email_list):
+    client = SendGridAPIClient(os.getenv("SENDGRID_API_KEY"))
 
     unsubscribe = f"<a href='mailto:{from_addr}?subject=Unsubscribe'>Unsubscribe</a>"
     for i, email in enumerate(email_list):
@@ -43,16 +44,16 @@ if __name__ == "__main__":
                         help="A markdown file for contents of the Email", type=argparse.FileType("r"))
     args = parser.parse_args()
 
-    sg_api_key = os.getenv("SENDGRID_API_KEY")
+    load_dotenv()
+
     base_key = os.getenv("AIRTABLE_BASE_ID")
     table_name = os.getenv("AIRTABLE_TABLE_NAME")
     from_addr = os.getenv("FROM_ADDRESS")
 
     md_content = render_markdown(args.content)
-    subject = md_content.metadata.get("Subject")
+    subject = md_content.metadata.get("subject")
     if subject != None:
         emails = get_emails(base=base_key, table=table_name)
-        send_emails(from_addr=from_addr, subject=subject,
-                    content=md_content, email_list=emails, api_key=sg_api_key)
+        send_emails(from_addr=from_addr, subject=subject, content=md_content, email_list=emails)
     else:
         print("Subject not found in the Markdown file")
