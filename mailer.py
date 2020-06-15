@@ -9,9 +9,9 @@ import markdown2 as md
 
 def get_emails(base, table):
     airtable = Airtable(base, table)
-    get_all_emails = airtable.get_all(fields='Email')
+    airtable_emails = airtable.get_all(fields='Email')
     emails = []
-    for email in get_all_emails:
+    for email in airtable_emails:
         emails.append(email['fields']['Email'])
     return emails
 
@@ -21,16 +21,11 @@ def render_markdown(file):
 
 
 def send_emails(from_addr, subject, content, email_list):
-    client = SendGridAPIClient(os.getenv("SENDGRID_API_KEY"))
+    client = SendGridAPIClient()
 
     unsubscribe = f"<a href='mailto:{from_addr}?subject=Unsubscribe'>Unsubscribe</a>"
     for i, email in enumerate(email_list):
-        message = Mail(
-            subject=subject,
-            from_email=from_addr,
-            html_content=f"{content}\n{unsubscribe}",
-            to_emails=[email],
-        )
+        message = Mail(subject=subject, html_content=f"{content}\n{unsubscribe}", from_email=from_addr, to_emails=[email])
         try:
             resp = client.send(message)
             print(f"{i+1} emails sent")
@@ -40,8 +35,7 @@ def send_emails(from_addr, subject, content, email_list):
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
-    parser.add_argument('-c', '--content', required=True,
-                        help="A markdown file for contents of the Email", type=argparse.FileType("r"))
+    parser.add_argument('-c', '--content', required=True, help="A markdown file for contents of the Email", type=argparse.FileType("r"))
     args = parser.parse_args()
 
     load_dotenv()
