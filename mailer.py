@@ -7,8 +7,8 @@ from sendgrid.helpers.mail import Mail
 import markdown2 as md
 
 
-def get_emails(base, table):
-    airtable = Airtable(base, table)
+def get_emails(base, table, api_key):
+    airtable = Airtable(base, table, api_key=api_key)
     airtable_emails = airtable.get_all(fields='Email')
     emails = []
     for email in airtable_emails:
@@ -43,11 +43,12 @@ if __name__ == "__main__":
     base_key = os.getenv("AIRTABLE_BASE_ID")
     table_name = os.getenv("AIRTABLE_TABLE_NAME")
     from_addr = os.getenv("FROM_ADDRESS")
+    api_key = os.getenv("AIRTABLE_API_KEY")
 
     md_content = render_markdown(args.content)
     subject = md_content.metadata.get("subject")
     if subject != None:
-        emails = get_emails(base=base_key, table=table_name)
+        emails = get_emails(base=base_key, table=table_name, api_key=api_key)
         send_emails(from_addr=from_addr, subject=subject, content=md_content, email_list=emails)
     else:
         print("Subject not found in the Markdown file")
